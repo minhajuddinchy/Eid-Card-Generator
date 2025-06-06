@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <title>Digital Eid Card Generator</title>
+  <style>
+    /* FONT */
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Hind Siliguri", sans-serif;
+      background: linear-gradient(135deg, #e6f7ff, #f8f0e5);
+      color: #333;
+      min-height: 100vh;
+      padding-bottom: 2rem;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M10,10 Q25,5 40,10 T70,10 Q85,15 90,30 T90,70 Q85,85 70,90 T30,90 Q15,85 10,70 T10,30 Q15,15 30,10" fill="none" stroke="%2328a745" stroke-width="0.5" opacity="0.2"/></svg>');
+    }
+    header {
+      background: linear-gradient(to right, #28a745, #1d7d3c);
+      color: white;
+      text-align: center;
+      padding: 1.2em;
+      font-size: 1.8em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    header::before {
+      content: "✨";
+      position: absolute;
+      font-size: 3rem;
+      top: 10px;
+      left: 20px;
+      opacity: 0.7;
+    }
+    header::after {
+      content: "✨";
+      position: absolute;
+      font-size: 3rem;
+      top: 10px;
+      right: 20px;
+      opacity: 0.7;
+    }
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5em;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5em;
+      justify-content: center;
+    }
+    .card-template {
+      flex: 1 1 380px;
+      text-align: center;
+      position: relative;
+    }
+    .card-title {
+      margin-top: 0.5em;
+      color: #28a745;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    .controls {
+      flex: 1 1 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2em;
+      padding: 1em;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      border: 3px solid #28a745;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      background: white;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+    }
+    .control-group label {
+      font-weight: 600;
+      color: #1d7d3c;
+      font-size: 1.1rem;
+    }
+    .controls input {
+      padding: 0.9em;
+      font-size: 1.05em;
+      border: 2px solid #c5e1c8;
+      border-radius: 8px;
+      font-family: "Hind Siliguri", sans-serif;
+      background: #f9fffa;
+      transition: all 0.3s;
+    }
+    .controls input:focus {
+      border-color: #28a745;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+    }
+    .controls input::placeholder {
+      color: #90a4ae;
+    }
+    button {
+      padding: 0.9em;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 8px;
+      font-family: "Hind Siliguri", sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    #downloadBtn {
+      background: linear-gradient(to right, #28a745, #1d7d3c);
+      color: white;
+      margin-top: 0.5em;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    #downloadBtn:hover {
+      background: linear-gradient(to right, #218838, #16612e);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    #downloadBtn:active {
+      transform: translateY(0);
+    }
+    .bg-switcher {
+      display: flex;
+      gap: 12px;
+      margin-top: 1em;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .bg-switcher img {
+      width: 110px;
+      height: 70px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+    .bg-switcher img:hover {
+      border: 3px solid #28a745;
+      transform: scale(1.05);
+    }
+    .bg-switcher img.active {
+      border: 3px solid #28a745;
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    .image-upload-container {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    .image-upload-container input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .upload-btn {
+      background: #e3f2e9;
+      color: #1d7d3c;
+      border: 2px dashed #28a745;
+      padding: 0.9em;
+      text-align: center;
+      font-weight: 500;
+      width: 100%;
+    }
+    .upload-btn:hover {
+      background: #d4e8da;
+    }
+    .section-title {
+      color: #28a745;
+      border-bottom: 2px solid #c5e1c8;
+      padding-bottom: 0.5em;
+      margin: 1em 0 0.5em;
+      font-size: 1.3rem;
+    }
+    .instructions {
+      background: #e3f2e9;
+      padding: 1.2em;
+      border-radius: 10px;
+      margin-top: 1.5em;
+      border-left: 4px solid #28a745;
+    }
+    .instructions h3 {
+      color: #1d7d3c;
+      margin-bottom: 0.5em;
+    }
+    .instructions ul {
+      padding-left: 1.5em;
+    }
+    .instructions li {
+      margin-bottom: 0.5em;
+      line-height: 1.5;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2em;
+      color: #1d7d3c;
+      font-weight: 500;
+    }
+    
+    /* Color Picker Styles */
+    .color-picker-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .color-preview {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      border: 2px solid #c5e1c8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      background: #28a745;
+    }
+    .color-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-input-container input[type="color"] {
+      width: 60px;
+      height: 40px;
+      padding: 0;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .color-input-container input[type="text"] {
+      flex: 1;
+      padding: 0.7em;
+      border: 2px solid #c5e1c8;
+      border-radius: 8px;
+      font-family: "Hind Siliguri", sans-serif;
+    }
+    .predefined-colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #eee;
+      transition: all 0.2s ease;
+    }
+    .color-swatch:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    .color-swatch.active {
+      transform: scale(1.2);
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      border: 2px solid #333;
+    }
+    
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .card-template, .controls {
+        width: 100%;
+        max-width: 600px;
+      }
+      canvas {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>✨ ঈদ কার্ড জেনারেটর ✨</header>
+  <div class="container">
+    <div class="card-template">
+      <canvas id="cardCanvas" width="600" height="800"></canvas>
+      <div class="card-title">আপনার কাস্টমাইজড ঈদ কার্ড</div>
+    </div>
+    <div class="controls">
+      <h2 class="section-title">কার্ড কাস্টমাইজ করুন</h2>
+      
+      <div class="control-group">
+        <label for="nameInput">আপনার নাম</label>
+        <input type="text" id="nameInput" placeholder="আপনার নাম লিখুন">
+      </div>
+      
+      <div class="control-group">
+        <label for="messageInput">ঈদের শুভেচ্ছা বার্তা</label>
+        <input type="text" id="messageInput" placeholder="ঈদের শুভেচ্ছা বার্তা লিখুন">
+      </div>
+      
+      <div class="control-group">
+        <label>আপনার ছবি আপলোড করুন</label>
+        <div class="image-upload-container">
+          <div class="upload-btn">📸 ছবি সিলেক্ট করুন</div>
+          <input type="file" id="imageUpload" accept="image/*">
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <label>টেক্সট রং নির্বাচন করুন</label>
+        <div class="color-picker-container">
+          <div class="color-preview" id="colorPreview">নির্বাচিত রং</div>
+          <div class="color-input-container">
+            <input type="color" id="colorPicker" value="#ffffff">
+            <input type="text" id="colorInput" placeholder="হেক্স কোড">
+          </div>
+          <div class="predefined-colors">
+            <div class="color-swatch " data-color="#000000" style="background-color:#000000;" title="কালো"></div>
+            <div class="color-swatch" data-color="#28a745" style="background-color:#28a745;" title="সবুজ"></div>
+            <div class="color-swatch" data-color="#d32f2f" style="background-color:#d32f2f;" title="লাল"></div>
+            <div class="color-swatch" data-color="#f39c12" style="background-color:#f39c12;" title="হলুদ"></div>
+            <div class="color-swatch" data-color="#e91e63" style="background-color:#e91e63;" title="গোলাপি"></div>
+            <div class="color-swatch" data-color="#9b59b6" style="background-color:#9b59b6;" title="বেগুনি"></div>
+            <div class="color-swatch" data-color="#1565C0" style="background-color:#1565C0;" title="নীল"></div>
+            <div class="color-swatch active" data-color="#ffffff" style="background-color:#ffffff; border:1px solid #aaa;" title="সাদা"></div>
+            <div class="color-swatch" data-color="#FF5722" style="background-color:#FF5722;" title="কমলা"></div>
+            <div class="color-swatch" data-color="#795548" style="background-color:#795548;" title="বাদামী"></div>
+            <div class="color-swatch" data-color="#607D8B" style="background-color:#607D8B;" title="ধূসর নীল"></div>
+            <div class="color-swatch" data-color="#4CAF50" style="background-color:#4CAF50;" title="সবুজ"></div>
+          </div>
+        </div>
+      </div>
+      
+      <button id="downloadBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+          <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+        </svg>
+        কার্ড ডাউনলোড করুন
+      </button>
+      
+      <h3 class="section-title">পটভূমি নির্বাচন করুন</h3>
+      <div class="bg-switcher">
+        <img src="templates/template (1).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (2).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (3).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (4).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (5).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (6).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (7).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (8).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (9).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (10).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (11).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (12).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (13).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (14).jpg" onclick="setBackground(this.src)">
+        <img src="templates/template (16).jpg" onclick="setBackground(this.src)">
+      </div>
+      
+      <div class="instructions">
+        <h3>ব্যবহার নির্দেশিকা:</h3>
+        <ul>
+          <li>আপনার নাম এবং শুভেচ্ছা বার্তা লিখুন</li>
+          <li>আপনার ছবি আপলোড করুন (সার্কেলে প্রদর্শিত হবে)</li>
+          <li>পছন্দসই রং এবং ব্যাকগ্রাউন্ড নির্বাচন করুন</li>
+          <li>কার্ডটি ডাউনলোড করুন এবং শেয়ার করুন</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    ঈদ মোবারক!ভালোবাসা ও আনন্দ ছড়িয়ে দিন আপনার প্রিয়জনদের মাঝে <br>Developed By : <a href="https://www.facebook.com/yafid.sadman/" target="_blank" >Yafid Sadman</a>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('cardCanvas');
+    const ctx = canvas.getContext('2d');
+    let bgImage = new Image();
+    let uploadedImage = null;
+    let selectedColor = '#ffffff';
+    
+    // Set initial background
+    bgImage.src = "templates/template (1).jpg";
+    bgImage.crossOrigin = "Anonymous";
+
+    const innerMargin = 60;
+    const textArea = {
+      x: innerMargin,
+      y: 450,
+      width: canvas.width - innerMargin * 2,
+      height: 200,
+    };
+
+    // Update color preview display
+    function updateColorPreview(color) {
+      const colorPreview = document.getElementById('colorPreview');
+      colorPreview.style.backgroundColor = color;
+      
+      // Determine text color based on background brightness
+      const r = parseInt(color.substr(1, 2), 16);
+      const g = parseInt(color.substr(3, 2), 16);
+      const b = parseInt(color.substr(5, 2), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      colorPreview.style.color = brightness > 125 ? '#000' : '#fff';
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      const lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const testWidth = context.measureText(testLine).width;
+        if (testWidth > maxWidth && n > 0) {
+          lines.push(line.trim());
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line.trim());
+
+      for (let i = 0; i < lines.length; i++) {
+        const textWidth = context.measureText(lines[i]).width;
+        context.fillText(lines[i], x + (maxWidth - textWidth) / 2, y + i * lineHeight);
+      }
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function drawCard(name = '', message = '', forDownload = false) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (forDownload) {
+        drawRoundedRect(ctx, 0, 0, canvas.width, canvas.height, 40);
+        ctx.save();
+        ctx.clip();
+      }
+
+      // Draw background
+      if (bgImage.complete && bgImage.naturalHeight !== 0) {
+        // Maintain aspect ratio for background
+        const imgRatio = bgImage.width / bgImage.height;
+        const canvasRatio = canvas.width / canvas.height;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (imgRatio > canvasRatio) {
+          drawHeight = canvas.height;
+          drawWidth = bgImage.width * (canvas.height / bgImage.height);
+          offsetX = (canvas.width - drawWidth) / 2;
+          offsetY = 0;
+        } else {
+          drawWidth = canvas.width;
+          drawHeight = bgImage.height * (canvas.width / bgImage.width);
+          offsetX = 0;
+          offsetY = (canvas.height - drawHeight) / 2;
+        }
+        
+        ctx.drawImage(bgImage, offsetX, offsetY, drawWidth, drawHeight);
+      } else {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw semi-transparent overlay for text readability
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      drawRoundedRect(ctx, innerMargin - 10, 90, canvas.width - (innerMargin - 10)*2, 630, 20);
+      ctx.fill();
+      
+      // Draw title
+      ctx.font = 'bold 42px Hind Siliguri';
+      ctx.fillStyle = selectedColor;
+      ctx.textAlign = 'center';
+      ctx.fillText('ঈদ মোবারক', canvas.width / 2, 150);
+      ctx.textAlign = 'left';
+
+      // Draw uploaded image with proper aspect ratio
+      if (uploadedImage) {
+        const cx = canvas.width / 2;
+        const cy = 300;
+        const radius = 80;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.clip();
+
+        // Calculate aspect ratio and draw properly
+        const imgRatio = uploadedImage.width / uploadedImage.height;
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (imgRatio > 1) {
+          // Landscape image
+          drawHeight = radius * 2;
+          drawWidth = drawHeight * imgRatio;
+          offsetX = cx - drawWidth / 2;
+          offsetY = cy - drawHeight / 2;
+        } else {
+          // Portrait image
+          drawWidth = radius * 2;
+          drawHeight = drawWidth / imgRatio;
+          offsetX = cx - drawWidth / 2;
+          offsetY = cy - drawHeight / 2;
+        }
+
+        ctx.drawImage(uploadedImage, offsetX, offsetY, drawWidth, drawHeight);
+        ctx.restore();
+
+        // Draw border
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
+      // Draw message
+      ctx.font = '500 28px Hind Siliguri';
+      ctx.fillStyle = selectedColor;
+      wrapText(ctx, message, textArea.x, textArea.y, textArea.width, 40);
+
+      // Draw name
+      ctx.font = '500 24px Hind Siliguri';
+      if (name) {
+        ctx.fillText('-' + name, canvas.width - 180, 760);
+      }
+
+      if (forDownload) {
+        ctx.restore();
+      }
+    }
+
+    function setBackground(src, element) {
+      bgImage = new Image();
+      bgImage.crossOrigin = 'anonymous';
+      bgImage.onload = () => {
+        drawCard(
+          document.getElementById('nameInput').value,
+          document.getElementById('messageInput').value
+        );
+        // Update active state
+        document.querySelectorAll('.bg-switcher img').forEach(img => {
+          img.classList.remove('active');
+        });
+        if (element) element.classList.add('active');
+      };
+      bgImage.src = src;
+    }
+
+    // Initialize the color picker
+    function initColorPicker() {
+      const colorPicker = document.getElementById('colorPicker');
+      const colorInput = document.getElementById('colorInput');
+      const colorSwatches = document.querySelectorAll('.color-swatch');
+      
+      // Set initial values
+      colorInput.value = selectedColor;
+      updateColorPreview(selectedColor);
+      
+      // Color picker input
+      colorPicker.addEventListener('input', function() {
+        selectedColor = this.value;
+        colorInput.value = this.value;
+        updateColorPreview(selectedColor);
+        drawCard(
+          document.getElementById('nameInput').value,
+          document.getElementById('messageInput').value
+        );
+        
+        // Update active swatch
+        colorSwatches.forEach(swatch => {
+          swatch.classList.remove('active');
+          if (swatch.dataset.color.toLowerCase() === selectedColor.toLowerCase()) {
+            swatch.classList.add('active');
+          }
+        });
+      });
+      
+      // Color text input
+      colorInput.addEventListener('input', function() {
+        const newColor = this.value;
+        // Validate hex color
+        if (/^#([0-9A-F]{3}){1,2}$/i.test(newColor)) {
+          selectedColor = newColor;
+          colorPicker.value = newColor;
+          updateColorPreview(newColor);
+          drawCard(
+            document.getElementById('nameInput').value,
+            document.getElementById('messageInput').value
+          );
+          
+          // Update active swatch
+          colorSwatches.forEach(swatch => {
+            swatch.classList.remove('active');
+            if (swatch.dataset.color.toLowerCase() === newColor.toLowerCase()) {
+              swatch.classList.add('active');
+            }
+          });
+        }
+      });
+      
+      // Color swatches
+      colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function() {
+          const color = this.dataset.color;
+          selectedColor = color;
+          colorPicker.value = color;
+          colorInput.value = color;
+          updateColorPreview(color);
+          drawCard(
+            document.getElementById('nameInput').value,
+            document.getElementById('messageInput').value
+          );
+          
+          // Update active state
+          colorSwatches.forEach(s => s.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    }
+
+    document.getElementById('nameInput').addEventListener('input', () => {
+      drawCard(
+        document.getElementById('nameInput').value,
+        document.getElementById('messageInput').value
+      );
+    });
+
+    document.getElementById('messageInput').addEventListener('input', () => {
+      drawCard(
+        document.getElementById('nameInput').value,
+        document.getElementById('messageInput').value
+      );
+    });
+
+    document.getElementById('imageUpload').addEventListener('change', function(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        uploadedImage = new Image();
+        uploadedImage.onload = function() {
+          drawCard(
+            document.getElementById('nameInput').value,
+            document.getElementById('messageInput').value
+          );
+        }
+        uploadedImage.src = event.target.result;
+      }
+      if (e.target.files[0]) {
+        reader.readAsDataURL(e.target.files[0]);
+        document.querySelector('.upload-btn').textContent = 'ছবি সফলভাবে আপলোড হয়েছে!';
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+      drawCard(
+        document.getElementById('nameInput').value,
+        document.getElementById('messageInput').value,
+        true
+      );
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.download = 'eid_mubarak_card.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        drawCard(
+          document.getElementById('nameInput').value,
+          document.getElementById('messageInput').value
+        );
+      }, 300);
+    });
+
+    // Initialize card with sample text
+    document.getElementById('nameInput').value = 'আপনার নাম';
+    document.getElementById('messageInput').value = 'আপনার প্রিয়জনদের জন্য ঈদের শুভেচ্ছা';
+    
+    // Initial draw after images are loaded
+    bgImage.onload = () => {
+      drawCard(
+        document.getElementById('nameInput').value,
+        document.getElementById('messageInput').value
+      );
+      initColorPicker();
+    };
+  </script>
+</body>
+</html>
